@@ -10,8 +10,15 @@
 ****************************************************************************
 *   UPDATES
 *
-*   $Id: lzw.c,v 1.2 2005/03/10 05:44:02 michael Exp $
+*   $Id: lzw.c,v 1.4 2005/03/27 15:56:47 michael Exp $
 *   $Log: lzw.c,v $
+*   Revision 1.4  2005/03/27 15:56:47  michael
+*   Use variable length code words.
+*   Include new e-mail addres.
+*
+*   Revision 1.3  2005/03/10 14:26:58  michael
+*   User variable names that match discription in web page.
+*
 *   Revision 1.2  2005/03/10 05:44:02  michael
 *   Minimize the size of the dictionary.
 *
@@ -21,7 +28,7 @@
 ****************************************************************************
 *
 * LZW: An ANSI C Lempel-Ziv-Welch Encoding/Decoding Routines
-* Copyright (C) 2005 by Michael Dipperstein (mdipper@cs.ucsb.edu)
+* Copyright (C) 2005 by Michael Dipperstein (mdipper@alumni.engr.ucsb.edu)
 *
 * This library is free software; you can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public
@@ -65,21 +72,20 @@ typedef struct
 
 #define EMPTY           -1
 
-#define CODE_LEN        12                  /* # bits in a code word */
-#define FIRST_CODE      (1 << CHAR_BIT)     /* location of 1st string code */
+#define MIN_CODE_LEN    9                   /* min # bits in a code word */
+#define MAX_CODE_LEN    15                  /* max # bits in a code word */
 
-#define MAX_CODES       (1 << CODE_LEN)
+#define FIRST_CODE      (1 << CHAR_BIT)     /* value of 1st string code */
+
+#define MAX_CODES       (1 << MAX_CODE_LEN)
 
 #define DICT_SIZE       (MAX_CODES - FIRST_CODE)
 
-#define CODE_MS_BITS    (CODE_LEN - CHAR_BIT)
-#define MS_BITS_MASK    (UCHAR_MAX << (CHAR_BIT - CODE_MS_BITS))
-
-#if (CODE_LEN <= CHAR_BIT)
+#if (MIN_CODE_LEN <= CHAR_BIT)
 #error Code words must be larger than 1 character
 #endif
 
-#if (CODE_LEN > (2 * CHAR_BIT))
+#if (MAX_CODE_LEN > (2 * CHAR_BIT))
 #error Code words larger than 2 characters require a re-write of GetCodeWord\
  and PutCodeWord
 #endif
@@ -91,6 +97,9 @@ typedef struct
 /***************************************************************************
 *                                  MACROS
 ***************************************************************************/
+#define CODE_MS_BITS(BITS)      ((BITS) - CHAR_BIT)
+#define MS_BITS_MASK(BITS)      (UCHAR_MAX << (CHAR_BIT - CODE_MS_BITS(BITS)))
+#define CURRENT_MAX_CODES(BITS)     (1 << (BITS))
 
 /***************************************************************************
 *                            GLOBAL VARIABLES
@@ -98,6 +107,7 @@ typedef struct
 
 /* dictionary of string codes (encode process uses a hash key) */
 dictionary_t dictionary[DICT_SIZE];
+char currentCodeLen;
 
 /***************************************************************************
 *                               PROTOTYPES
@@ -161,6 +171,9 @@ int LZWEncodeFile(char *inFile, char *outFile)
         dictionary[index].codeWord = EMPTY;
     }
 
+    /* start with 9 bit code words */
+    currentCodeLen = 9;
+
     nextCode = FIRST_CODE;  /* code for next (first) string */
 
     /* now start the actual encoding process */
@@ -189,6 +202,15 @@ int LZWEncodeFile(char *inFile, char *outFile)
                 dictionary[index].suffixChar = c;
 
                 nextCode++;
+            }
+
+            /* are we using enough bits to write out this code word? */
+            if ((code >= (CURRENT_MAX_CODES(currentCodeLen) - 1)) &&
+                (currentCodeLen < MAX_CODE_LEN))
+            {
+                /* mark need for bigger code word with all ones */
+                PutCodeWord((CURRENT_MAX_CODES(currentCodeLen) - 1), bfpOut);
+                currentCodeLen++;
             }
 
             /* write out code for string prior to reading c */
@@ -294,6 +316,9 @@ int LZWDecodeFile(char *inFile, char *outFile)
         }
     }
 
+    /* start with 9 bit code words */
+    currentCodeLen = 9;
+
     /* initialize for decoding */
     nextCode = FIRST_CODE;  /* code for next (first) string */
 
@@ -305,6 +330,15 @@ int LZWDecodeFile(char *inFile, char *outFile)
     /* decode rest of file */
     while ((code = GetCodeWord(bfpIn)) != EOF)
     {
+
+        /* look for code length increase marker */
+        if (((CURRENT_MAX_CODES(currentCodeLen) - 1) == code) &&
+            (currentCodeLen < MAX_CODE_LEN))
+        {
+            currentCodeLen++;
+            code = GetCodeWord(bfpIn);
+        }
+
         if (code < nextCode)
         {
             /* we have a known code.  decode it */
@@ -407,12 +441,12 @@ int GetCodeWord(bit_file_t *bfpIn)
 
 
     /* get remaining bits */
-    if (BitFileGetBits(bfpIn, &byte, CODE_MS_BITS) == EOF)
+    if (BitFileGetBits(bfpIn, &byte, CODE_MS_BITS(currentCodeLen)) == EOF)
     {
         return EOF;
     }
 
-    code |= ((int)byte) << CODE_MS_BITS;
+    code |= ((int)byte) << CODE_MS_BITS(currentCodeLen);
 
     return code;
 }
@@ -441,6 +475,7 @@ void PutCodeWord(int code, bit_file_t *bfpOut)
     BitFilePutChar(byte, bfpOut);
 
     /* write remaining bits */
-    byte = (code >> CODE_MS_BITS) & MS_BITS_MASK;
-    BitFilePutBits(bfpOut, &byte, CODE_MS_BITS);
+    byte = (code >> CODE_MS_BITS(currentCodeLen)) &
+        MS_BITS_MASK(currentCodeLen);
+    BitFilePutBits(bfpOut, &byte, CODE_MS_BITS(currentCodeLen));
 }

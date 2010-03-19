@@ -9,8 +9,11 @@
 ****************************************************************************
 *   UPDATES
 *
-*   $Id: sample.c,v 1.2 2005/02/21 03:52:06 michael Exp $
+*   $Id: sample.c,v 1.3 2005/03/27 21:10:22 michael Exp $
 *   $Log: sample.c,v $
+*   Revision 1.3  2005/03/27 21:10:22  michael
+*   Update e-mail address in copyright notice.
+*
 *   Revision 1.2  2005/02/21 03:52:06  michael
 *   Correct comments in headers.
 *
@@ -20,7 +23,7 @@
 ****************************************************************************
 *
 * SAMPLE: Sample usage of Lempel-Ziv-Welch Encoding Library
-* Copyright (C) 2005 by Michael Dipperstein (mdipper@cs.ucsb.edu)
+* Copyright (C) 2005 by Michael Dipperstein (mdipper@alumni.engr.ucsb.edu)
 *
 * This library is free software; you can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public

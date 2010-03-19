@@ -56,17 +56,19 @@ options:
 HISTORY
 -------
 02/20/05  - Initial Release
+03/27/05  - Utilizes variable code word length
 
 TODO
 ----
-- Start with 9 bit code words and allow code sizes to grow as the number of
-  known code words increase.
 - Do something to handle the case where the string table is full and does not
   contain entries for strings that are being encoded.
   - possibly purge and regenerate table after coding drops below X% hits
   - possibly replace least recently used code word (LRU) with new code
+- Speed up code word search during compression
+  - possibly improve hash table collisoion handling
+  - consider use of tree instead of hash table
 
 AUTHOR
 ------
-Michael Dipperstein (mdipper@cs.ucsb.edu)
+Michael Dipperstein (mdipper@alumni.engr.ucsb.edu)
 http://michael.dipperstein.com
