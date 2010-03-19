@@ -60,6 +60,9 @@ HISTORY
 03/27/05  - Utilizes variable code word length
 04/20/05  - Separated encoding and decoding routines
           - Uses binary tree for encoding dictionary structure
+06/21/05  - Corrected BitFileGetBits/PutBits error that accessed an extra
+            byte when given an integral number of bytes.
+
 TODO
 ----
 - Do something to handle the case where the string table is full and does not
