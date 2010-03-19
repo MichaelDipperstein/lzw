@@ -1,0 +1,72 @@
+DESCRIPTION
+-----------
+This archive contains a simple and readable ANSI C implementation of
+Lempel-Ziv-Welch coding and decoding.  This implementation is not intended to
+be the best, fastest, smallest, or any other performance related adjective.
+
+More information on lzw encoding may be found at:
+http://michael.dipperstein.com/lzw.html
+http://www.datacompression.info/lzw.shtml
+
+FILES
+-----
+bitfile.c       - Library to allow bitwise reading and writing of files.
+bitfile.h       - Header for bitfile library.
+COPYING         - Rules for copying and distributing LGPL software
+getopt.c        - LGPL version of getopt source from GNU project
+getopt.h        - LGPL version of getopt headers from GNU project
+LICENSE         - GNU Lesser General Public License
+lzw.c           - Library of lzw encoding and decoding routines.
+lzw.h           - Header containing prototypes for lzw library functions.
+Makefile        - makefile for this project (assumes gcc compiler and GNU make)
+README          - this file
+sample.c        - Demonstration of how to use the lzw library functions
+
+BUILDING
+--------
+To build these files with GNU make and gcc, simply enter "make" from the
+command line.  The executable will be named sample (or sample.exe).
+
+USAGE
+-----
+Usage: sample <options>
+
+options:
+  -c : Encode input file to output file.
+  -d : Decode input file to output file.
+  -i <filename> : Name of input file.
+  -o <filename> : Name of output file.
+  -h|?  : Print out command line options.
+
+-c      Compress the specified input file (see -i) using the Lempel-Ziv-Welch
+        encoding algorithm.  Results are written to the specified output file
+        (see -o).
+
+-d      Decompress the specified input file (see -i) using the Lempel-Ziv-Welch
+        decoding algorithm.  Results are written to the specified output file
+        (see -o).  Only files compressed by this program may be decompressed.
+
+-i <filename>   The name of the input file.  There is no valid usage of this
+                program without a specified input file.
+
+-o <filename>   The name of the output file.  If no file is specified, stdout
+                will be used.  NOTE: Sending compressed output to stdout may
+                produce undesirable results.
+
+HISTORY
+-------
+02/20/05  - Initial Release
+
+TODO
+----
+- Start with 9 bit code words and allow code sizes to grow as the number of
+  known code words increase.
+- Do something to handle the case where the string table is full and does not
+  contain entries for strings that are being encoded.
+  - possibly purge and regenerate table after coding drops below X% hits
+  - possibly replace least recently used code word (LRU) with new code
+
+AUTHOR
+------
+Michael Dipperstein (mdipper@cs.ucsb.edu)
+http://michael.dipperstein.com
