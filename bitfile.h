@@ -2,7 +2,7 @@
 *                            Bit Stream File Header
 *
 *   File    : bitfile.h
-*   Purpose : Providea definitions and prototypes for a simple library of
+*   Purpose : Provides definitions and prototypes for a simple library of
 *             I/O functions for files that contain data in sizes that aren't
 *             integral bytes.
 *             An attempt was made to make the functions in this library
@@ -16,8 +16,17 @@
 ****************************************************************************
 *   UPDATES
 *
-*   $Id: bitfile.h,v 1.3 2004/11/09 14:16:58 michael Exp $
+*   $Id: bitfile.h,v 1.6 2007/08/26 21:53:48 michael Exp $
 *   $Log: bitfile.h,v $
+*   Revision 1.6  2007/08/26 21:53:48  michael
+*   Changes required for LGPL v3.
+*
+*   Revision 1.5  2006/06/03 19:33:11  michael
+*   Used spell checker to correct spelling.
+*
+*   Revision 1.4  2005/12/06 15:06:37  michael
+*   Added BitFileGetBitsInt and BitFilePutBitsInt for integer types.
+*
 *   Revision 1.3  2004/11/09 14:16:58  michael
 *   Added functions to convert open bit_file_t to FILE and to
 *   align open bit_file_t to the next byte.
@@ -32,21 +41,22 @@
 ****************************************************************************
 *
 * Bitfile: Bit stream File I/O Routines
-* Copyright (C) 2004 by Michael Dipperstein (mdipper@cs.ucsb.edu)
+* Copyright (C) 2004-2007 by Michael Dipperstein (mdipper@cs.ucsb.edu)
 *
-* This library is free software; you can redistribute it and/or
-* modify it under the terms of the GNU Lesser General Public
-* License as published by the Free Software Foundation; either
-* version 2.1 of the License, or (at your option) any later version.
+* This file is part of the bit file library.
 *
-* This library is distributed in the hope that it will be useful,
+* The bit file library is free software; you can redistribute it and/or
+* modify it under the terms of the GNU Lesser General Public License as
+* published by the Free Software Foundation; either version 3 of the
+* License, or (at your option) any later version.
+*
+* The bit file library is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
+* General Public License for more details.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with this library; if not, write to the Free Software
-* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+* You should have received a copy of the GNU Lesser General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
 ***************************************************************************/
 
@@ -94,8 +104,18 @@ int BitFilePutChar(const int c, bit_file_t *stream);
 int BitFileGetBit(bit_file_t *stream);
 int BitFilePutBit(const int c, bit_file_t *stream);
 
-/* get/put number of bits */
+/* get/put number of bits (most significant bit to least significat bit) */
 int BitFileGetBits(bit_file_t *stream, void *bits, const unsigned int count);
 int BitFilePutBits(bit_file_t *stream, void *bits, const unsigned int count);
+
+/***************************************************************************
+* get/put number of bits from integer types (short, int, long, ...)
+* machine endiness is accounted for.
+* size is the size of the data structure pointer to by bits.
+***************************************************************************/
+int BitFileGetBitsInt(bit_file_t *stream, void *bits, const unsigned int count,
+    const size_t size);
+int BitFilePutBitsInt(bit_file_t *stream, void *bits, const unsigned int count,
+    const size_t size);
 
 #endif /* _BITFILE_H_ */

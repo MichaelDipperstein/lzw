@@ -5,21 +5,21 @@ Lempel-Ziv-Welch coding and decoding.  This implementation is not intended to
 be the best, fastest, smallest, or any other performance related adjective.
 
 More information on lzw encoding may be found at:
-http://michael.dipperstein.com/lzw.html
+http://michael.dipperstein.com/lzw
 http://www.datacompression.info/lzw.shtml
 
 FILES
 -----
 bitfile.c       - Library to allow bitwise reading and writing of files.
 bitfile.h       - Header for bitfile library.
-COPYING         - Rules for copying and distributing LGPL software
-getopt.c        - LGPL version of getopt source from GNU project
-getopt.h        - LGPL version of getopt headers from GNU project
-LICENSE         - GNU Lesser General Public License
+COPYING         - Rules for copying and distributing GPL software
+COPYING.LESSER  - Rules for copying and distributing LGPL software
 lzw.h           - Header containing prototypes for lzw library functions.
 lzwdecode.c     - Source for library lzw decoding routines.
 lzwencode.c     - Source for library lzw encoding routines.
 Makefile        - makefile for this project (assumes gcc compiler and GNU make)
+optlist.c       - Source code for GetOptlist function and supporting functions
+optlist.h       - Header file to be included by code using the optlist library
 README          - this file
 sample.c        - Demonstration of how to use the lzw library functions
 
@@ -62,6 +62,8 @@ HISTORY
           - Uses binary tree for encoding dictionary structure
 06/21/05  - Corrected BitFileGetBits/PutBits error that accessed an extra
             byte when given an integral number of bytes.
+08/30/07  - Explicitly licensed under LGPL version 3.
+          - Replaces getopt() with optlist library.
 
 TODO
 ----

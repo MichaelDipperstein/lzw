@@ -10,8 +10,11 @@
 ****************************************************************************
 *   UPDATES
 *
-*   $Id: lzwencode.c,v 1.2 2005/04/21 04:26:57 michael Exp $
+*   $Id: lzwencode.c,v 1.3 2007/09/29 01:28:09 michael Exp $
 *   $Log: lzwencode.c,v $
+*   Revision 1.3  2007/09/29 01:28:09  michael
+*   Changes required for LGPL v3.
+*
 *   Revision 1.2  2005/04/21 04:26:57  michael
 *   Encoding dictionary is now built using a binary tree.
 *
@@ -35,21 +38,23 @@
 ****************************************************************************
 *
 * LZW: An ANSI C Lempel-Ziv-Welch Encoding/Decoding Routines
-* Copyright (C) 2005 by Michael Dipperstein (mdipper@alumni.engr.ucsb.edu)
+* Copyright (C) 2005, 2007 by
+* Michael Dipperstein (mdipper@alumni.engr.ucsb.edu)
 *
-* This library is free software; you can redistribute it and/or
-* modify it under the terms of the GNU Lesser General Public
-* License as published by the Free Software Foundation; either
-* version 2.1 of the License, or (at your option) any later version.
+* This file is part of the lzw library.
 *
-* This library is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
+* The lzw library is free software; you can redistribute it and/or
+* modify it under the terms of the GNU Lesser General Public License as
+* published by the Free Software Foundation; either version 3 of the
+* License, or (at your option) any later version.
 *
-* You should have received a copy of the GNU Lesser General Public
-* License along with this library; if not, write to the Free Software
-* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+* The lzw library is distributed in the hope that it will be useful, but
+* WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
+* General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
 ***************************************************************************/
 

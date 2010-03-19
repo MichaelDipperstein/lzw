@@ -1,8 +1,15 @@
 ############################################################################
 # Makefile for lzw encode/decode library and sample program
 #
-#   $Id: Makefile,v 1.3 2005/04/09 03:11:22 michael Exp $
+#   $Id: Makefile,v 1.5 2007/09/29 01:28:27 michael Exp $
 #   $Log: Makefile,v $
+#   Revision 1.5  2007/09/29 01:28:27  michael
+#   Replace getopt with optlist.
+#   Changes required for LGPL v3.
+#
+#   Revision 1.4  2007/07/16 02:18:15  michael
+#   Use -pedantic option when compiling.
+#
 #   Revision 1.3  2005/04/09 03:11:22  michael
 #   Separated encode and decode routines into two different files in order to
 #   make future enhancements easier.
@@ -16,11 +23,11 @@
 ############################################################################
 CC = gcc
 LD = gcc
-CFLAGS = -O3 -Wall -ansi -c
+CFLAGS = -O3 -Wall -pedantic -ansi -c
 LDFLAGS = -O3 -o
 
 # libraries
-LIBS = -L. -llzw -lgetopt
+LIBS = -L. -llzw -loptlist
 
 # Treat NT and non-NT windows the same
 ifeq ($(OS),Windows_NT)
@@ -35,12 +42,12 @@ else	#assume Linux/Unix
 	DEL = rm
 endif
 
-all:		sample$(EXE) liblzw.a libgetopt.a
+all:		sample$(EXE) liblzw.a liboptlist.a
 
-sample$(EXE):	sample.o liblzw.a libgetopt.a
+sample$(EXE):	sample.o liblzw.a liboptlist.a
 		$(LD) $^ $(LIBS) $(LDFLAGS) $@
 
-sample.o:	sample.c lzw.h getopt.h
+sample.o:	sample.c lzw.h optlist.h
 		$(CC) $(CFLAGS) $<
 
 liblzw.a:	lzwencode.o lzwdecode.o bitfile.o
@@ -56,11 +63,11 @@ lzwdecode.o:	lzwdecode.c lzw.h bitfile.h
 bitfile.o:	bitfile.c bitfile.h
 		$(CC) $(CFLAGS) $<
 
-libgetopt.a:	getopt.o
-		ar crv libgetopt.a getopt.o
-		ranlib libgetopt.a
+liboptlist.a:	optlist.o
+		ar crv liboptlist.a optlist.o
+		ranlib liboptlist.a
 
-getopt.o:	getopt.c getopt.h
+optlist.o:	optlist.c optlist.h
 		$(CC) $(CFLAGS) $<
 
 clean:
