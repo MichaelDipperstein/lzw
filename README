@@ -16,8 +16,9 @@ COPYING         - Rules for copying and distributing LGPL software
 getopt.c        - LGPL version of getopt source from GNU project
 getopt.h        - LGPL version of getopt headers from GNU project
 LICENSE         - GNU Lesser General Public License
-lzw.c           - Library of lzw encoding and decoding routines.
 lzw.h           - Header containing prototypes for lzw library functions.
+lzwdecode.c     - Source for library lzw decoding routines.
+lzwencode.c     - Source for library lzw encoding routines.
 Makefile        - makefile for this project (assumes gcc compiler and GNU make)
 README          - this file
 sample.c        - Demonstration of how to use the lzw library functions
@@ -57,7 +58,8 @@ HISTORY
 -------
 02/20/05  - Initial Release
 03/27/05  - Utilizes variable code word length
-
+04/20/05  - Separated encoding and decoding routines
+          - Uses binary tree for encoding dictionary structure
 TODO
 ----
 - Do something to handle the case where the string table is full and does not
@@ -65,8 +67,9 @@ TODO
   - possibly purge and regenerate table after coding drops below X% hits
   - possibly replace least recently used code word (LRU) with new code
 - Speed up code word search during compression
-  - possibly improve hash table collisoion handling
-  - consider use of tree instead of hash table
+  - try AVL or Red/Black trees
+  - maybe something similar to a Fibonacci heap
+- Use typedefs and more type size checking for better portability
 
 AUTHOR
 ------

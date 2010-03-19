@@ -1,17 +1,21 @@
 /***************************************************************************
-*               Lempel-Ziv-Welch Encoding and Decoding Library
+*                    Lempel-Ziv-Welch Decoding Functions
 *
-*   File    : lzw.c
-*   Purpose : Use Lempel-Ziv-Welch coding to compress/decompress file
-*             streams
+*   File    : lzwdecode.c
+*   Purpose : Provides a function for decoding Lempel-Ziv-Welch encoded
+*             file streams
 *   Author  : Michael Dipperstein
 *   Date    : January 30, 2005
 *
 ****************************************************************************
 *   UPDATES
 *
-*   $Id: lzw.c,v 1.4 2005/03/27 15:56:47 michael Exp $
-*   $Log: lzw.c,v $
+*   $Id: lzwdecode.c,v 1.1 2005/04/09 03:11:22 michael Exp $
+*   $Log: lzwdecode.c,v $
+*   Revision 1.1  2005/04/09 03:11:22  michael
+*   Separated encode and decode routines into two different files in order to
+*   make future enhancements easier.
+*
 *   Revision 1.4  2005/03/27 15:56:47  michael
 *   Use variable length code words.
 *   Include new e-mail addres.
@@ -61,10 +65,9 @@
 ***************************************************************************/
 typedef struct
 {
-    int codeWord;               /* code word for this entry */
     unsigned char suffixChar;   /* last char in encoded string */
     unsigned int prefixCode;    /* code for remaining chars in string */
-} dictionary_t;
+} decode_dictionary_t;
 
 /***************************************************************************
 *                                CONSTANTS
@@ -105,175 +108,21 @@ typedef struct
 *                            GLOBAL VARIABLES
 ***************************************************************************/
 
-/* dictionary of string codes (encode process uses a hash key) */
-dictionary_t dictionary[DICT_SIZE];
+/* dictionary of string the code word is the dictionary index */
+decode_dictionary_t dictionary[DICT_SIZE];
 char currentCodeLen;
 
 /***************************************************************************
 *                               PROTOTYPES
 ***************************************************************************/
-int GetDictionaryIndex(int prefixCode, unsigned char c);
-
 unsigned char DecodeRecursive(unsigned int code, FILE *fpOut);
 
-/* file I/O */
+/* read encoded data */
 int GetCodeWord(bit_file_t *bfpIn);
-void PutCodeWord(int code, bit_file_t *bfpOut);
 
 /***************************************************************************
 *                                FUNCTIONS
 ***************************************************************************/
-
-/***************************************************************************
-*   Function   : LZWEncodeFile
-*   Description: This routine reads an input file 1 character at a time and
-*                writes out an LZW encoded version of that file.
-*   Parameters : inFile - Name of file to encode
-*                outFile - Name of file to write encoded output to
-*   Effects    : File is encoded using the LZW algorithm with CODE_LEN
-*                codes.
-*   Returned   : TRUE for success, otherwise FALSE.
-***************************************************************************/
-int LZWEncodeFile(char *inFile, char *outFile)
-{
-    FILE *fpIn;                         /* uncoded input */
-    bit_file_t *bfpOut;                 /* encoded output */
-
-    int code;                           /* code for current string */
-    int nextCode;                       /* next available code index */
-    int c;                              /* character to add to string */
-    int index;
-
-    /* open input and output files */
-    if (NULL == (fpIn = fopen(inFile, "rb")))
-    {
-        perror(inFile);
-        return FALSE;
-    }
-
-    if (NULL == outFile)
-    {
-        bfpOut = MakeBitFile(stdout, BF_WRITE);
-    }
-    else
-    {
-        if (NULL == (bfpOut = BitFileOpen(outFile, BF_WRITE)))
-        {
-            fclose(fpIn);
-            perror(outFile);
-            return FALSE;
-        }
-    }
-
-    /* initialize dictionary as empty */
-    for (index = 0; index < DICT_SIZE; index++)
-    {
-        dictionary[index].codeWord = EMPTY;
-    }
-
-    /* start with 9 bit code words */
-    currentCodeLen = 9;
-
-    nextCode = FIRST_CODE;  /* code for next (first) string */
-
-    /* now start the actual encoding process */
-
-    code = fgetc(fpIn);     /* start with string = first character */
-
-    while ((c = fgetc(fpIn)) != EOF)
-    {
-        /* look for code + c in the dictionary */
-        index = GetDictionaryIndex(code, c);
-
-        if ((dictionary[index].codeWord != EMPTY) &&
-            (dictionary[index].prefixCode == code) && 
-            (dictionary[index].suffixChar == c))
-        {
-            /* code + c is in the dictionary, make it's code the new code */
-            code = dictionary[index].codeWord;
-        }
-        else
-        {
-            /* code + c is not in the dictionary, add it if there's room */
-            if (nextCode < MAX_CODES)
-            {
-                dictionary[index].codeWord = nextCode;
-                dictionary[index].prefixCode = code;
-                dictionary[index].suffixChar = c;
-
-                nextCode++;
-            }
-
-            /* are we using enough bits to write out this code word? */
-            if ((code >= (CURRENT_MAX_CODES(currentCodeLen) - 1)) &&
-                (currentCodeLen < MAX_CODE_LEN))
-            {
-                /* mark need for bigger code word with all ones */
-                PutCodeWord((CURRENT_MAX_CODES(currentCodeLen) - 1), bfpOut);
-                currentCodeLen++;
-            }
-
-            /* write out code for string prior to reading c */
-            PutCodeWord(code, bfpOut);
-
-            /* new code is just c */
-            code = c;
-        }
-    }
-
-    /* no more input.  write out last of the code. */
-    PutCodeWord(code, bfpOut);
-
-    fclose(fpIn);
-    BitFileClose(bfpOut);
-
-    return TRUE;
-}
-
-/***************************************************************************
-*   Function   : GetDictionaryIndex
-*   Description: This routine searches the dictionary for an entry with
-*                matching prefixCode and appended character.  If one isn't
-*                found, the next available index is returned.  I chose a
-*                very simple hash key for dictionary look up.
-*   Parameters : prefixCode - code for the string c is being appended to
-*                c - character appended to string to make new string
-*   Effects    : None
-*   Returned   : Index for entry with matching prefix code and appended
-*                character or index to empty slot if none found.
-***************************************************************************/
-int GetDictionaryIndex(int prefixCode, unsigned char c)
-{
-    int index;
-    int key;
-
-    /* compute simple hash key for code */
-    key = (prefixCode << CHAR_BIT) | c;     /* concatenate c to code */
-    key %= DICT_SIZE;
-    index = key;
-
-    do {
-        if ((dictionary[index].prefixCode == prefixCode) &&
-            (dictionary[index].suffixChar == c))
-        {
-            /* found prefix + c in dictionary */
-            return index;
-        }
-
-        if (EMPTY == dictionary[index].codeWord)
-        {
-            /* found empty slot for prefix + c*/
-            return index;
-        }
-
-        /* try next index */
-        index ++;
-        index %= DICT_SIZE;
-
-    } while (key != index);
-
-    return index;       /* dictionary is full and string isn't in it. */
-}
 
 /***************************************************************************
 *   Function   : LZWDecodeFile
@@ -449,33 +298,4 @@ int GetCodeWord(bit_file_t *bfpIn)
     code |= ((int)byte) << CODE_MS_BITS(currentCodeLen);
 
     return code;
-}
-
-/***************************************************************************
-*   Function   : PutCodeWord
-*   Description: This function writes a code word from to an encoded file.
-*                In order to deal with endian issue the code word is
-*                written least significant byte followed by the remaining
-*                bits.
-*   Parameters : bfpOut - bit file containing the encoded data
-*                code - code word to add to the encoded data
-*   Effects    : code word is written to the encoded output
-*   Returned   : None
-*
-*   NOTE: If the code word contains more than 16 bits, this routine should
-*         be modified to write out all the bytes from least significant to
-*         most significant followed by any left over bits.
-***************************************************************************/
-void PutCodeWord(int code, bit_file_t *bfpOut)
-{
-    unsigned char byte;
-
-    /* write LS character */
-    byte = code & 0xFF;
-    BitFilePutChar(byte, bfpOut);
-
-    /* write remaining bits */
-    byte = (code >> CODE_MS_BITS(currentCodeLen)) &
-        MS_BITS_MASK(currentCodeLen);
-    BitFilePutBits(bfpOut, &byte, CODE_MS_BITS(currentCodeLen));
 }

@@ -1,8 +1,12 @@
 ############################################################################
 # Makefile for lzw encode/decode library and sample program
 #
-#   $Id: Makefile,v 1.2 2005/02/22 05:41:58 michael Exp $
+#   $Id: Makefile,v 1.3 2005/04/09 03:11:22 michael Exp $
 #   $Log: Makefile,v $
+#   Revision 1.3  2005/04/09 03:11:22  michael
+#   Separated encode and decode routines into two different files in order to
+#   make future enhancements easier.
+#
 #   Revision 1.2  2005/02/22 05:41:58  michael
 #   Build code using libraries for easier integration into other applications.
 #
@@ -39,11 +43,14 @@ sample$(EXE):	sample.o liblzw.a libgetopt.a
 sample.o:	sample.c lzw.h getopt.h
 		$(CC) $(CFLAGS) $<
 
-liblzw.a:	lzw.o bitfile.o
-		ar crv liblzw.a lzw.o bitfile.o
+liblzw.a:	lzwencode.o lzwdecode.o bitfile.o
+		ar crv liblzw.a lzwencode.o lzwdecode.o bitfile.o
 		ranlib liblzw.a
 
-lzw.o:		lzw.c lzw.h bitfile.h
+lzwencode.o:	lzwencode.c lzw.h bitfile.h
+		$(CC) $(CFLAGS) $<
+
+lzwdecode.o:	lzwdecode.c lzw.h bitfile.h
 		$(CC) $(CFLAGS) $<
 
 bitfile.o:	bitfile.c bitfile.h
