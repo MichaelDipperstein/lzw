@@ -10,8 +10,13 @@
 ****************************************************************************
 *   UPDATES
 *
-*   $Id: lzwdecode.c,v 1.2 2007/09/29 01:28:09 michael Exp $
+*   $Id: lzwdecode.c,v 1.3 2009/12/22 05:46:10 michael Exp $
 *   $Log: lzwdecode.c,v $
+*   Revision 1.3  2009/12/22 05:46:10  michael
+*   - Fixed bug that occurs when output code word grows by two or more bits.
+*   - Used BitFilePutBitsInt/BitFileGetBitsInt to allow for code words as large as sizeof(int).
+*     (#define limits code words to 20 bits).
+*
 *   Revision 1.2  2007/09/29 01:28:09  michael
 *   Changes required for LGPL v3.
 *
@@ -81,7 +86,7 @@ typedef struct
 #define EMPTY           -1
 
 #define MIN_CODE_LEN    9                   /* min # bits in a code word */
-#define MAX_CODE_LEN    15                  /* max # bits in a code word */
+#define MAX_CODE_LEN    20                  /* max # bits in a code word */
 
 #define FIRST_CODE      (1 << CHAR_BIT)     /* value of 1st string code */
 
@@ -91,11 +96,6 @@ typedef struct
 
 #if (MIN_CODE_LEN <= CHAR_BIT)
 #error Code words must be larger than 1 character
-#endif
-
-#if (MAX_CODE_LEN > (2 * CHAR_BIT))
-#error Code words larger than 2 characters require a re-write of GetCodeWord\
- and PutCodeWord
 #endif
 
 #if ((MAX_CODES - 1) > INT_MAX)
@@ -115,7 +115,6 @@ typedef struct
 
 /* dictionary of string the code word is the dictionary index */
 decode_dictionary_t dictionary[DICT_SIZE];
-char currentCodeLen;
 
 /***************************************************************************
 *                               PROTOTYPES
@@ -123,7 +122,7 @@ char currentCodeLen;
 unsigned char DecodeRecursive(unsigned int code, FILE *fpOut);
 
 /* read encoded data */
-int GetCodeWord(bit_file_t *bfpIn);
+int GetCodeWord(bit_file_t *bfpIn, unsigned char codeLen);
 
 /***************************************************************************
 *                                FUNCTIONS
@@ -147,6 +146,7 @@ int LZWDecodeFile(char *inFile, char *outFile)
     unsigned int nextCode;              /* value of next code */
     unsigned int lastCode;              /* last decoded code word */
     unsigned int code;                  /* code word to decode */
+    unsigned char currentCodeLen;       /* length of code words now */
     unsigned char c;                    /* last decoded character */
 
     /* open input and output files */
@@ -177,20 +177,20 @@ int LZWDecodeFile(char *inFile, char *outFile)
     nextCode = FIRST_CODE;  /* code for next (first) string */
 
     /* first code from file must be a character.  use it for initial values */
-    lastCode = GetCodeWord(bfpIn);
+    lastCode = GetCodeWord(bfpIn, currentCodeLen);
     c = lastCode;
     fputc(lastCode, fpOut);
 
     /* decode rest of file */
-    while ((code = GetCodeWord(bfpIn)) != EOF)
+    while ((code = GetCodeWord(bfpIn, currentCodeLen)) != EOF)
     {
 
         /* look for code length increase marker */
-        if (((CURRENT_MAX_CODES(currentCodeLen) - 1) == code) &&
+        while (((CURRENT_MAX_CODES(currentCodeLen) - 1) == code) &&
             (currentCodeLen < MAX_CODE_LEN))
         {
             currentCodeLen++;
-            code = GetCodeWord(bfpIn);
+            code = GetCodeWord(bfpIn, currentCodeLen);
         }
 
         if (code < nextCode)
@@ -263,7 +263,6 @@ unsigned char DecodeRecursive(unsigned int code, FILE *fpOut)
     }
 
     fputc(c, fpOut);
-    
     return firstChar;
 }
 
@@ -274,6 +273,7 @@ unsigned char DecodeRecursive(unsigned int code, FILE *fpOut)
 *                code word is read least significant byte followed by the
 *                remaining bits.
 *   Parameters : bfpIn - bit file containing the encoded data
+*                codeLen - number of bits in code word
 *   Effects    : code word is read from encoded input
 *   Returned   : The next code word in the encoded file.  EOF if the end
 *                of file has been reached.
@@ -282,25 +282,17 @@ unsigned char DecodeRecursive(unsigned int code, FILE *fpOut)
 *         be modified to read in all the bytes from least significant to
 *         most significant followed by any left over bits.
 ***************************************************************************/
-int GetCodeWord(bit_file_t *bfpIn)
+int GetCodeWord(bit_file_t *bfpIn, unsigned char codeLen)
 {
-    unsigned char byte;
-    int code;
+    int code = 0;
+    int count;
 
-    /* get LS character */
-    if ((code = BitFileGetChar(bfpIn)) == EOF)
+    count = BitFileGetBitsInt(bfpIn, &code, codeLen, sizeof(code));
+
+    if (count < codeLen)
     {
-        return EOF;
+        code = EOF;     /* BitFileGetBitsInt gives partial results at EOF */
     }
-
-
-    /* get remaining bits */
-    if (BitFileGetBits(bfpIn, &byte, CODE_MS_BITS(currentCodeLen)) == EOF)
-    {
-        return EOF;
-    }
-
-    code |= ((int)byte) << CODE_MS_BITS(currentCodeLen);
 
     return code;
 }

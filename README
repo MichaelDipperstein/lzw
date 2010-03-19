@@ -64,6 +64,10 @@ HISTORY
             byte when given an integral number of bytes.
 08/30/07  - Explicitly licensed under LGPL version 3.
           - Replaces getopt() with optlist library.
+12/21/09  - Fixed bug that occurs when output code word grows by two or more
+            bits.
+            Used BitFilePutBitsInt/BitFileGetBitsInt to allow for code words
+            as large as sizeof(int).  (#define limits code words to 20 bits).
 
 TODO
 ----

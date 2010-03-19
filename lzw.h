@@ -1,7 +1,7 @@
 /***************************************************************************
 *          Header for Lempel-Ziv-Welch Encoding and Decoding Library
 *
-*   File    : arcode.h
+*   File    : lzw.h
 *   Purpose : Provides prototypes for functions that use Lempel-Ziv-Welch
 *             coding to encode/decode files.
 *   Author  : Michael Dipperstein
@@ -10,8 +10,11 @@
 ****************************************************************************
 *   UPDATES
 *
-*   $Id: lzw.h,v 1.3 2007/09/29 01:28:09 michael Exp $
+*   $Id: lzw.h,v 1.4 2008/01/24 02:30:35 michael Exp $
 *   $Log: lzw.h,v $
+*   Revision 1.4  2008/01/24 02:30:35  michael
+*   Correct comments.
+*
 *   Revision 1.3  2007/09/29 01:28:09  michael
 *   Changes required for LGPL v3.
 *
@@ -67,4 +70,4 @@ int LZWEncodeFile(char *inFile, char *outFile);
 /* decode inFile*/
 int LZWDecodeFile(char *inFile, char *outFile);
 
-#endif  /* ndef _ARCODE_H_ */
+#endif  /* ndef _LZW_H_ */

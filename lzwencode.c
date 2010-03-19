@@ -10,8 +10,13 @@
 ****************************************************************************
 *   UPDATES
 *
-*   $Id: lzwencode.c,v 1.3 2007/09/29 01:28:09 michael Exp $
+*   $Id: lzwencode.c,v 1.4 2009/12/22 05:46:10 michael Exp $
 *   $Log: lzwencode.c,v $
+*   Revision 1.4  2009/12/22 05:46:10  michael
+*   - Fixed bug that occurs when output code word grows by two or more bits.
+*   - Used BitFilePutBitsInt/BitFileGetBitsInt to allow for code words as large as sizeof(int).
+*     (#define limits code words to 20 bits).
+*
 *   Revision 1.3  2007/09/29 01:28:09  michael
 *   Changes required for LGPL v3.
 *
@@ -88,7 +93,7 @@ typedef struct dict_node_t
 ***************************************************************************/
 
 #define MIN_CODE_LEN    9                   /* min # bits in a code word */
-#define MAX_CODE_LEN    15                  /* max # bits in a code word */
+#define MAX_CODE_LEN    20                  /* max # bits in a code word */
 
 #define FIRST_CODE      (1 << CHAR_BIT)     /* value of 1st string code */
 
@@ -96,11 +101,6 @@ typedef struct dict_node_t
 
 #if (MIN_CODE_LEN <= CHAR_BIT)
 #error Code words must be larger than 1 character
-#endif
-
-#if (MAX_CODE_LEN > (2 * CHAR_BIT))
-#error Code words larger than 2 characters require a re-write of GetCodeWord\
- and PutCodeWord
 #endif
 
 #if ((MAX_CODES - 1) > INT_MAX)
@@ -117,9 +117,6 @@ typedef struct dict_node_t
 /***************************************************************************
 *                            GLOBAL VARIABLES
 ***************************************************************************/
-
-/* dictionary of string codes (encode process uses a hash key) */
-char currentCodeLen;
 
 /***************************************************************************
 *                               PROTOTYPES
@@ -138,7 +135,7 @@ dict_node_t *FindDictionaryEntry(dict_node_t *root, int prefixCode,
 unsigned int MakeKey(unsigned int prefixCode, unsigned char suffixChar);
 
 /* write encoded data */
-void PutCodeWord(int code, bit_file_t *bfpOut);
+void PutCodeWord(bit_file_t *bfpOut, int code, unsigned char codeLen);
 
 /***************************************************************************
 *                                FUNCTIONS
@@ -160,6 +157,7 @@ int LZWEncodeFile(char *inFile, char *outFile)
     bit_file_t *bfpOut;                 /* encoded output */
 
     int code;                           /* code for current string */
+    unsigned char currentCodeLen;       /* length of the current code */
     unsigned int nextCode;              /* next available code index */
     int c;                              /* character to add to string */
 
@@ -207,7 +205,7 @@ int LZWEncodeFile(char *inFile, char *outFile)
         nextCode++;
 
         /* write code for 1st char */
-        PutCodeWord(code, bfpOut);
+        PutCodeWord(bfpOut, code, currentCodeLen);
 
         /* new code is just 2nd char */
         code = c;
@@ -245,18 +243,23 @@ int LZWEncodeFile(char *inFile, char *outFile)
                     node->right = tmp;
                 }
             }
+            else
+            {
+                fprintf(stderr, "Error: Dictionary Full\n");
+            }
 
             /* are we using enough bits to write out this code word? */
-            if ((code >= (CURRENT_MAX_CODES(currentCodeLen) - 1)) &&
+            while ((code >= (CURRENT_MAX_CODES(currentCodeLen) - 1)) &&
                 (currentCodeLen < MAX_CODE_LEN))
             {
                 /* mark need for bigger code word with all ones */
-                PutCodeWord((CURRENT_MAX_CODES(currentCodeLen) - 1), bfpOut);
+                PutCodeWord(bfpOut, (CURRENT_MAX_CODES(currentCodeLen) - 1),
+                    currentCodeLen);
                 currentCodeLen++;
             }
 
             /* write out code for the string before c was added */
-            PutCodeWord(code, bfpOut);
+            PutCodeWord(bfpOut, code, currentCodeLen);
 
             /* new code is just c */
             code = c;
@@ -264,7 +267,7 @@ int LZWEncodeFile(char *inFile, char *outFile)
     }
 
     /* no more input.  write out last of the code. */
-    PutCodeWord(code, bfpOut);
+    PutCodeWord(bfpOut, code, currentCodeLen);
 
     fclose(fpIn);
     BitFileClose(bfpOut);
@@ -442,23 +445,11 @@ dict_node_t *FindDictionaryEntry(dict_node_t *root, int prefixCode,
 *                bits.
 *   Parameters : bfpOut - bit file containing the encoded data
 *                code - code word to add to the encoded data
+*                codeLen - length of the code word
 *   Effects    : code word is written to the encoded output
 *   Returned   : None
-*
-*   NOTE: If the code word contains more than 16 bits, this routine should
-*         be modified to write out all the bytes from least significant to
-*         most significant followed by any left over bits.
 ***************************************************************************/
-void PutCodeWord(int code, bit_file_t *bfpOut)
+void PutCodeWord(bit_file_t *bfpOut, int code, unsigned char codeLen)
 {
-    unsigned char byte;
-
-    /* write LS character */
-    byte = code & 0xFF;
-    BitFilePutChar(byte, bfpOut);
-
-    /* write remaining bits */
-    byte = (code >> CODE_MS_BITS(currentCodeLen)) &
-        MS_BITS_MASK(currentCodeLen);
-    BitFilePutBits(bfpOut, &byte, CODE_MS_BITS(currentCodeLen));
+    BitFilePutBitsInt(bfpOut, &code, codeLen, sizeof(code));
 }
