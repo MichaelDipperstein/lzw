@@ -112,7 +112,7 @@ typedef struct dict_node_t
 ***************************************************************************/
 #define CODE_MS_BITS(BITS)      ((BITS) - CHAR_BIT)
 #define MS_BITS_MASK(BITS)      (UCHAR_MAX << (CHAR_BIT - CODE_MS_BITS(BITS)))
-#define CURRENT_MAX_CODES(BITS)     (1 << (BITS))
+#define CURRENT_MAX_CODES(BITS)     ((unsigned int)(1 << (BITS)))
 
 /***************************************************************************
 *                            GLOBAL VARIABLES
@@ -156,7 +156,7 @@ int LZWEncodeFile(char *inFile, char *outFile)
     FILE *fpIn;                         /* uncoded input */
     bit_file_t *bfpOut;                 /* encoded output */
 
-    int code;                           /* code for current string */
+    unsigned int code;                  /* code for current string */
     unsigned char currentCodeLen;       /* length of the current code */
     unsigned int nextCode;              /* next available code index */
     int c;                              /* character to add to string */
@@ -195,7 +195,16 @@ int LZWEncodeFile(char *inFile, char *outFile)
 
     /* now start the actual encoding process */
 
-    code = fgetc(fpIn);     /* start with code string = first character */
+    c = fgetc(fpIn);
+
+    if (EOF == c)
+    {
+        return FALSE;   /* empty file */
+    }
+    else
+    {
+        code = c;       /* start with code string = first character */
+    }
 
     /* create a tree root from 1st 2 character string */
     if ((c = fgetc(fpIn)) != EOF)
@@ -451,5 +460,5 @@ dict_node_t *FindDictionaryEntry(dict_node_t *root, int prefixCode,
 ***************************************************************************/
 void PutCodeWord(bit_file_t *bfpOut, int code, unsigned char codeLen)
 {
-    BitFilePutBitsInt(bfpOut, &code, codeLen, sizeof(code));
+    BitFilePutBitsNum(bfpOut, &code, codeLen, sizeof(code));
 }

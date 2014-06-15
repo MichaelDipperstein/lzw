@@ -107,7 +107,7 @@ typedef struct
 ***************************************************************************/
 #define CODE_MS_BITS(BITS)      ((BITS) - CHAR_BIT)
 #define MS_BITS_MASK(BITS)      (UCHAR_MAX << (CHAR_BIT - CODE_MS_BITS(BITS)))
-#define CURRENT_MAX_CODES(BITS)     (1 << (BITS))
+#define CURRENT_MAX_CODES(BITS)     ((unsigned int)(1 << (BITS)))
 
 /***************************************************************************
 *                            GLOBAL VARIABLES
@@ -182,7 +182,7 @@ int LZWDecodeFile(char *inFile, char *outFile)
     fputc(lastCode, fpOut);
 
     /* decode rest of file */
-    while ((code = GetCodeWord(bfpIn, currentCodeLen)) != EOF)
+    while ((int)(code = GetCodeWord(bfpIn, currentCodeLen)) != EOF)
     {
 
         /* look for code length increase marker */
@@ -287,11 +287,11 @@ int GetCodeWord(bit_file_t *bfpIn, unsigned char codeLen)
     int code = 0;
     int count;
 
-    count = BitFileGetBitsInt(bfpIn, &code, codeLen, sizeof(code));
+    count = BitFileGetBitsNum(bfpIn, &code, codeLen, sizeof(code));
 
     if (count < codeLen)
     {
-        code = EOF;     /* BitFileGetBitsInt gives partial results at EOF */
+        code = EOF;     /* BitFileGetBitsNum gives partial results at EOF */
     }
 
     return code;

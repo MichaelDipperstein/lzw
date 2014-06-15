@@ -23,7 +23,7 @@
 ############################################################################
 CC = gcc
 LD = gcc
-CFLAGS = -O3 -Wall -pedantic -ansi -c
+CFLAGS = -O3 -Wall -Wextra -pedantic -ansi -c
 LDFLAGS = -O3 -o
 
 # libraries
