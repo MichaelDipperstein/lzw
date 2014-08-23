@@ -7,27 +7,9 @@
 *   Date    : January 30, 2005
 *
 ****************************************************************************
-*   UPDATES
-*
-*   $Id: sample.c,v 1.4 2007/09/29 01:28:27 michael Exp $
-*   $Log: sample.c,v $
-*   Revision 1.4  2007/09/29 01:28:27  michael
-*   Replace getopt with optlist.
-*   Changes required for LGPL v3.
-*
-*   Revision 1.3  2005/03/27 21:10:22  michael
-*   Update e-mail address in copyright notice.
-*
-*   Revision 1.2  2005/02/21 03:52:06  michael
-*   Correct comments in headers.
-*
-*   Revision 1.1.1.1  2005/02/21 03:35:34  michael
-*   Initial Release
-*
-****************************************************************************
 *
 * SAMPLE: Sample usage of Lempel-Ziv-Welch Encoding Library
-* Copyright (C) 2005, 2007 by
+* Copyright (C) 2005, 2007, 2014 by
 * Michael Dipperstein (mdipper@alumni.engr.ucsb.edu)
 *
 * This file is part of the lzw library.

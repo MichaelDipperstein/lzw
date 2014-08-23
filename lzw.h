@@ -8,26 +8,9 @@
 *   Date    : January 30, 2004
 *
 ****************************************************************************
-*   UPDATES
-*
-*   $Id: lzw.h,v 1.4 2008/01/24 02:30:35 michael Exp $
-*   $Log: lzw.h,v $
-*   Revision 1.4  2008/01/24 02:30:35  michael
-*   Correct comments.
-*
-*   Revision 1.3  2007/09/29 01:28:09  michael
-*   Changes required for LGPL v3.
-*
-*   Revision 1.2  2005/03/27 21:12:03  michael
-*   Update e-mail address in copyright notice.
-*
-*   Revision 1.1.1.1  2005/02/21 03:35:34  michael
-*   Initial Release
-*
-****************************************************************************
 *
 * LZW: An ANSI C Lempel-Ziv-Welch Encoding/Decoding Routines
-* Copyright (C) 2005, 2007 by
+* Copyright (C) 2005, 2007, 2014 by
 * Michael Dipperstein (mdipper@alumni.engr.ucsb.edu)
 *
 * This file is part of the lzw library.

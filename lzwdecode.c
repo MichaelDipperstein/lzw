@@ -8,39 +8,9 @@
 *   Date    : January 30, 2005
 *
 ****************************************************************************
-*   UPDATES
-*
-*   $Id: lzwdecode.c,v 1.3 2009/12/22 05:46:10 michael Exp $
-*   $Log: lzwdecode.c,v $
-*   Revision 1.3  2009/12/22 05:46:10  michael
-*   - Fixed bug that occurs when output code word grows by two or more bits.
-*   - Used BitFilePutBitsInt/BitFileGetBitsInt to allow for code words as large as sizeof(int).
-*     (#define limits code words to 20 bits).
-*
-*   Revision 1.2  2007/09/29 01:28:09  michael
-*   Changes required for LGPL v3.
-*
-*   Revision 1.1  2005/04/09 03:11:22  michael
-*   Separated encode and decode routines into two different files in order to
-*   make future enhancements easier.
-*
-*   Revision 1.4  2005/03/27 15:56:47  michael
-*   Use variable length code words.
-*   Include new e-mail addres.
-*
-*   Revision 1.3  2005/03/10 14:26:58  michael
-*   User variable names that match discription in web page.
-*
-*   Revision 1.2  2005/03/10 05:44:02  michael
-*   Minimize the size of the dictionary.
-*
-*   Revision 1.1.1.1  2005/02/21 03:35:34  michael
-*   Initial Release
-*
-****************************************************************************
 *
 * LZW: An ANSI C Lempel-Ziv-Welch Encoding/Decoding Routines
-* Copyright (C) 2005, 2007 by
+* Copyright (C) 2005, 2007, 2014 by
 * Michael Dipperstein (mdipper@alumni.engr.ucsb.edu)
 *
 * This file is part of the lzw library.
