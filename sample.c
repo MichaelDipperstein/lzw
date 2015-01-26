@@ -35,13 +35,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include "optlist.h"
 #include "lzw.h"
 
 /***************************************************************************
 *                               PROTOTYPES
 ***************************************************************************/
-char *RemovePath(char *fullPath);
 
 /***************************************************************************
 *                                FUNCTIONS
@@ -56,18 +56,21 @@ char *RemovePath(char *fullPath);
 *   Parameters : argc - number of parameters
 *                argv - parameter list
 *   Effects    : Encodes/Decodes input file
-*   Returned   : EXIT_SUCCESS for success, otherwise EXIT_FAILURE.
+*   Returned   : 0 for success, -1 for failure.  errno will be set in the
+*                event of a failure.
 ****************************************************************************/
 int main(int argc, char *argv[])
 {
-    option_t *optList, *thisOpt;
-    char *inFile, *outFile; /* name of input & output files */
+    option_t *optList;
+    option_t *thisOpt;
+    FILE *fpIn;             /* pointer to open input file */
+    FILE *fpOut;            /* pointer to open output file */
     char encode;            /* encode/decode */
 
     /* initialize data */
-    inFile = NULL;
-    outFile = NULL;
-    encode = TRUE;
+    fpIn = stdin;
+    fpOut = stdout;
+    encode = 1;
 
     /* parse command line */
     optList = GetOptList(argc, argv, "cdi:o:h?");
@@ -78,88 +81,90 @@ int main(int argc, char *argv[])
         switch(thisOpt->option)
         {
             case 'c':       /* compression mode */
-                encode = TRUE;
+                encode = 1;
                 break;
 
             case 'd':       /* decompression mode */
-                encode = FALSE;
+                encode = 0;
                 break;
 
             case 'i':       /* input file name */
-                if (inFile != NULL)
+                if (fpIn != stdin)
                 {
                     fprintf(stderr, "Multiple input files not allowed.\n");
-                    free(inFile);
+                    fclose(fpIn);
 
-                    if (outFile != NULL)
+                    if (fpOut != stdout)
                     {
-                        free(outFile);
+                        fclose(fpOut);
                     }
 
                     FreeOptList(optList);
-                    exit(EXIT_FAILURE);
+                    errno = EINVAL;
+                    return -1;
                 }
-                else if ((inFile =
-                    (char *)malloc(strlen(thisOpt->argument) + 1)) == NULL)
+
+                /* open input file as binary */
+                fpIn = fopen(thisOpt->argument, "rb");
+                if (fpIn == NULL)
                 {
-                    perror("Memory allocation");
+                    perror("Opening input file");
 
-                    if (outFile != NULL)
+                    if (fpOut != stdout)
                     {
-                        free(outFile);
+                        fclose(fpOut);
                     }
 
                     FreeOptList(optList);
-                    exit(EXIT_FAILURE);
+                    return -1;
                 }
-
-                strcpy(inFile, thisOpt->argument);
                 break;
 
             case 'o':       /* output file name */
-                if (outFile != NULL)
+                if (fpOut != stdout)
                 {
                     fprintf(stderr, "Multiple output files not allowed.\n");
-                    free(outFile);
+                    fclose(fpOut);
 
-                    if (inFile != NULL)
+                    if (fpIn != stdin)
                     {
-                        free(inFile);
+                        fclose(fpIn);
                     }
 
                     FreeOptList(optList);
-                    exit(EXIT_FAILURE);
+                    return -1;
                 }
-                else if ((outFile =
-                    (char *)malloc(strlen(thisOpt->argument) + 1)) == NULL)
+
+                /* open output file as binary */
+                fpOut = fopen(thisOpt->argument, "wb");
+                if (fpOut == NULL)
                 {
-                    perror("Memory allocation");
+                    perror("Opening output file");
 
-                    if (inFile != NULL)
+                    if (fpIn != stdin)
                     {
-                        free(inFile);
+                        fclose(fpIn);
                     }
 
                     FreeOptList(optList);
-                    exit(EXIT_FAILURE);
+                    return -1;
                 }
-
-                strcpy(outFile, thisOpt->argument);
                 break;
 
             case 'h':
             case '?':
-                printf("Usage: %s <options>\n\n", RemovePath(argv[0]));
+                printf("Usage: %s <options>\n\n", FindFileName(argv[0]));
                 printf("options:\n");
                 printf("  -c : Encode input file to output file.\n");
                 printf("  -d : Decode input file to output file.\n");
                 printf("  -i <filename> : Name of input file.\n");
                 printf("  -o <filename> : Name of output file.\n");
                 printf("  -h | ?  : Print out command line options.\n\n");
-                printf("Default: %s -c\n", RemovePath(argv[0]));
+                printf("Default: %s -c -i stdin -o stdout\n",
+                    FindFileName(argv[0]));
 
                 FreeOptList(optList);
-                return(EXIT_SUCCESS);
+                return 0;
         }
 
         optList = thisOpt->next;
@@ -167,76 +172,17 @@ int main(int argc, char *argv[])
         thisOpt = optList;
     }
 
-    /* validate command line */
-    if (inFile == NULL)
-    {
-        fprintf(stderr, "Input file must be provided\n");
-        fprintf(stderr, "Enter \"%s -?\" for help.\n", RemovePath(argv[0]));
-
-        if (outFile != NULL)
-        {
-            free(outFile);
-        }
-
-        exit (EXIT_FAILURE);
-    }
-    else if (outFile == NULL)
-    {
-        fprintf(stderr, "Output file must be provided\n");
-        fprintf(stderr, "Enter \"%s -?\" for help.\n", RemovePath(argv[0]));
-
-        if (inFile != NULL)
-        {
-            free(inFile);
-        }
-
-        exit (EXIT_FAILURE);
-    }
-
-    /* we have valid parameters encode or decode */
+    /* parsed the parameters.  now encode or decode. */
     if (encode)
     {
-        LZWEncodeFile(inFile, outFile);
+        LZWEncodeFile(fpIn, fpOut);
     }
     else
     {
-        LZWDecodeFile(inFile, outFile);
+        LZWDecodeFile(fpIn, fpOut);
     }
 
-    free(inFile);
-    free(outFile);
-    return EXIT_SUCCESS;
-}
-
-/****************************************************************************
-*   Function   : RemovePath
-*   Description: This is function accepts a pointer to the name of a file
-*                along with path information and returns a pointer to the
-*                character that is not part of the path.
-*   Parameters : fullPath - pointer to an array of characters containing
-*                           a file name and possible path modifiers.
-*   Effects    : None
-*   Returned   : Returns a pointer to the first character after any path
-*                information.
-****************************************************************************/
-char *RemovePath(char *fullPath)
-{
-    int i;
-    char *start, *tmp;                          /* start of file name */
-    const char delim[3] = {'\\', '/', ':'};     /* path deliminators */
-
-    start = fullPath;
-
-    /* find the first character after all file path delimiters */
-    for (i = 0; i < 3; i++)
-    {
-        tmp = strrchr(start, delim[i]);
-
-        if (tmp != NULL)
-        {
-            start = tmp + 1;
-        }
-    }
-
-    return start;
+    free(fpIn);
+    free(fpOut);
+    return 0;
 }

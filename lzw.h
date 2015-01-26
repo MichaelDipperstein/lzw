@@ -36,21 +36,14 @@
 /***************************************************************************
 *                                CONSTANTS
 ***************************************************************************/
-#ifndef FALSE
-#define FALSE       0
-#endif
-
-#ifndef TRUE
-#define TRUE        1
-#endif
 
 /***************************************************************************
 *                               PROTOTYPES
 ***************************************************************************/
  /* encode inFile */
-int LZWEncodeFile(char *inFile, char *outFile);
+int LZWEncodeFile(FILE *fpIn, FILE *fpOut);
 
 /* decode inFile*/
-int LZWDecodeFile(char *inFile, char *outFile);
+int LZWDecodeFile(FILE *fpIn, FILE *fpOut);
 
 #endif  /* ndef _LZW_H_ */

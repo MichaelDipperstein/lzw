@@ -34,9 +34,8 @@
 *                             INCLUDED FILES
 ***************************************************************************/
 #include <stdio.h>
-#include <stdlib.h>
 #include <limits.h>
-#include <string.h>
+#include <errno.h>
 #include "lzw.h"
 #include "bitfile.h"
 
@@ -102,16 +101,17 @@ int GetCodeWord(bit_file_t *bfpIn, unsigned char codeLen);
 *   Function   : LZWDecodeFile
 *   Description: This routine reads an input file 1 encoded string at a
 *                time and decodes it using the LZW algorithm.
-*   Parameters : inFile - Name of file to decode
-*                outFile - Name of file to write decoded output to
-*   Effects    : File is decoded using the LZW algorithm with CODE_LEN
-*                codes.
-*   Returned   : TRUE for success, otherwise FALSE.
+*   Parameters : fpIn - pointer to the open binary file to decode
+*                fpOut - pointer to the open binary file to write decoded
+*                       output
+*   Effects    : fpIn is decoded using the LZW algorithm with CODE_LEN codes
+*                and written to fpOut.  Neither file is closed after exit.
+*   Returned   : 0 for success, -1 for failure.  errno will be set in the
+*                event of a failure.
 ***************************************************************************/
-int LZWDecodeFile(char *inFile, char *outFile)
+int LZWDecodeFile(FILE *fpIn, FILE *fpOut)
 {
     bit_file_t *bfpIn;                  /* encoded input */
-    FILE *fpOut;                        /* decoded output */
 
     unsigned int nextCode;              /* value of next code */
     unsigned int lastCode;              /* last decoded code word */
@@ -119,25 +119,20 @@ int LZWDecodeFile(char *inFile, char *outFile)
     unsigned char currentCodeLen;       /* length of code words now */
     unsigned char c;                    /* last decoded character */
 
-    /* open input and output files */
-    if (NULL == (bfpIn = BitFileOpen(inFile, BF_READ)))
+    /* validate arguments */
+    if ((NULL == fpIn) || (NULL == fpOut))
     {
-        perror(inFile);
-        return FALSE;
+        errno = ENOENT;
+        return -1;
     }
 
-    if (NULL == outFile)
+    /* convert input file to bitfile */
+    bfpIn = MakeBitFile(fpIn, BF_READ);
+
+    if (NULL == bfpIn)
     {
-        fpOut = stdout;
-    }
-    else
-    {
-        if (NULL == (fpOut = fopen(outFile, "wb")))
-        {
-            BitFileClose(bfpIn);
-            perror(outFile);
-            return FALSE;
-        }
+        perror("Making Input File a BitFile");
+        return -1;
     }
 
     /* start with 9 bit code words */
@@ -195,9 +190,10 @@ int LZWDecodeFile(char *inFile, char *outFile)
         lastCode = code;
     }
 
-    fclose(fpOut);
-    BitFileClose(bfpIn);
-    return TRUE;
+    /* we've decoded everything, free bitfile structure */
+    BitFileToFILE(bfpIn);
+
+    return 0;
 }
 
 /***************************************************************************

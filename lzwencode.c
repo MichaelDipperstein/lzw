@@ -36,7 +36,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
-#include <string.h>
+#include <errno.h>
 #include "lzw.h"
 #include "bitfile.h"
 
@@ -112,15 +112,16 @@ void PutCodeWord(bit_file_t *bfpOut, int code, unsigned char codeLen);
 *   Function   : LZWEncodeFile
 *   Description: This routine reads an input file 1 character at a time and
 *                writes out an LZW encoded version of that file.
-*   Parameters : inFile - Name of file to encode
-*                outFile - Name of file to write encoded output to
-*   Effects    : File is encoded using the LZW algorithm with CODE_LEN
-*                codes.
-*   Returned   : TRUE for success, otherwise FALSE.
+*   Parameters : fpIn - pointer to the open binary file to encode
+*                fpOut - pointer to the open binary file to write encoded
+*                       output
+*   Effects    : fpIn is encoded using the LZW algorithm with CODE_LEN codes
+*                and written to fpOut.  Neither file is closed after exit.
+*   Returned   : 0 for success, -1 for failure.  errno will be set in the
+*                event of a failure.
 ***************************************************************************/
-int LZWEncodeFile(char *inFile, char *outFile)
+int LZWEncodeFile(FILE *fpIn, FILE *fpOut)
 {
-    FILE *fpIn;                         /* uncoded input */
     bit_file_t *bfpOut;                 /* encoded output */
 
     unsigned int code;                  /* code for current string */
@@ -131,25 +132,20 @@ int LZWEncodeFile(char *inFile, char *outFile)
     dict_node_t *dictRoot;              /* root of dictionary tree */
     dict_node_t *node;                  /* node of dictionary tree */
 
-    /* open input and output files */
-    if (NULL == (fpIn = fopen(inFile, "rb")))
+    /* validate arguments */
+    if ((NULL == fpIn) || (NULL == fpOut))
     {
-        perror(inFile);
-        return FALSE;
+        errno = ENOENT;
+        return -1;
     }
 
-    if (NULL == outFile)
+    /* convert output file to bitfile */
+    bfpOut = MakeBitFile(fpOut, BF_WRITE);
+
+    if (NULL == bfpOut)
     {
-        bfpOut = MakeBitFile(stdout, BF_WRITE);
-    }
-    else
-    {
-        if (NULL == (bfpOut = BitFileOpen(outFile, BF_WRITE)))
-        {
-            fclose(fpIn);
-            perror(outFile);
-            return FALSE;
-        }
+        perror("Making Output File a BitFile");
+        return -1;
     }
 
     /* initialize dictionary as empty */
@@ -166,7 +162,7 @@ int LZWEncodeFile(char *inFile, char *outFile)
 
     if (EOF == c)
     {
-        return FALSE;   /* empty file */
+        return -1;      /* empty file */
     }
     else
     {
@@ -245,8 +241,8 @@ int LZWEncodeFile(char *inFile, char *outFile)
     /* no more input.  write out last of the code. */
     PutCodeWord(bfpOut, code, currentCodeLen);
 
-    fclose(fpIn);
-    BitFileClose(bfpOut);
+    /* we've encoded everything, free bitfile structure */
+    BitFileToFILE(bfpOut);
 
     /* free the dictionary */
     if (dictRoot != NULL)
@@ -254,7 +250,7 @@ int LZWEncodeFile(char *inFile, char *outFile)
         FreeTree(dictRoot);
     }
 
-    return TRUE;
+    return 0;
 }
 
 /***************************************************************************
