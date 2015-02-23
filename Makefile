@@ -36,10 +36,10 @@ liblzw.a:	lzwencode.o lzwdecode.o bitfile.o
 		ar crv liblzw.a lzwencode.o lzwdecode.o bitfile.o
 		ranlib liblzw.a
 
-lzwencode.o:	lzwencode.c lzw.h bitfile.h
+lzwencode.o:	lzwencode.c lzw.h lzwlocal.h bitfile.h
 		$(CC) $(CFLAGS) $<
 
-lzwdecode.o:	lzwdecode.c lzw.h bitfile.h
+lzwdecode.o:	lzwdecode.c lzw.h lzwlocal.h bitfile.h
 		$(CC) $(CFLAGS) $<
 
 bitfile.o:	bitfile.c bitfile.h
