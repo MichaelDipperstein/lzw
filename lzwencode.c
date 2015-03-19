@@ -84,7 +84,7 @@ dict_node_t *FindDictionaryEntry(dict_node_t *root, int prefixCode,
 unsigned int MakeKey(unsigned int prefixCode, unsigned char suffixChar);
 
 /* write encoded data */
-void PutCodeWord(bit_file_t *bfpOut, int code, unsigned char codeLen);
+int PutCodeWord(bit_file_t *bfpOut, int code, unsigned char codeLen);
 
 /***************************************************************************
 *                                FUNCTIONS
@@ -156,6 +156,14 @@ int LZWEncodeFile(FILE *fpIn, FILE *fpOut)
     {
         /* special case for NULL root */
         dictRoot = MakeNode(nextCode, code, c);
+
+        if (NULL == dictRoot)
+        {
+            perror("Making Dictionary Root");
+            BitFileToFILE(bfpOut);
+            return -1;
+        }
+        
         nextCode++;
 
         /* write code for 1st char */
@@ -185,6 +193,15 @@ int LZWEncodeFile(FILE *fpIn, FILE *fpOut)
                 dict_node_t *tmp;
 
                 tmp = MakeNode(nextCode, code, c);
+
+                if (NULL == dictRoot)
+                {
+                    perror("Making Dictionary Node");
+                    FreeTree(dictRoot);
+                    BitFileToFILE(bfpOut);
+                    return -1;
+                }
+
                 nextCode++;
 
                 if (MakeKey(code, c) <
@@ -227,10 +244,7 @@ int LZWEncodeFile(FILE *fpIn, FILE *fpOut)
     BitFileToFILE(bfpOut);
 
     /* free the dictionary */
-    if (dictRoot != NULL)
-    {
-        FreeTree(dictRoot);
-    }
+    FreeTree(dictRoot);
 
     return 0;
 }
@@ -274,7 +288,8 @@ unsigned int MakeKey(unsigned int prefixCode, unsigned char suffixChar)
 *                             string.
 *                suffixChar - the last character of a string
 *   Effects    : Node is allocated for new dictionary entry
-*   Returned   : Pointer to newly allocated node
+*   Returned   : Pointer to newly allocated node or NULL on error.
+*                errno will be set on an error.
 ***************************************************************************/
 dict_node_t *MakeNode(unsigned int codeWord,
     unsigned int prefixCode, unsigned char suffixChar)
@@ -292,11 +307,6 @@ dict_node_t *MakeNode(unsigned int codeWord,
         node->left = NULL;
         node->right = NULL;
     }
-    else
-    {
-        perror("allocating dictionary node");
-        exit(EXIT_FAILURE);
-    }
 
     return node;
 }
@@ -311,6 +321,12 @@ dict_node_t *MakeNode(unsigned int codeWord,
 ***************************************************************************/
 void FreeTree(dict_node_t *node)
 {
+    if (NULL == node)
+    {
+        /* nothing to free */
+        return;
+    }
+
     /* free left branch */
     if (node->left != NULL)
     {
@@ -401,9 +417,12 @@ dict_node_t *FindDictionaryEntry(dict_node_t *root, int prefixCode,
 *                code - code word to add to the encoded data
 *                codeLen - length of the code word
 *   Effects    : code word is written to the encoded output
-*   Returned   : None
+*   Returned   : EOF for failure, ENOTSUP unsupported architecture,
+*                otherwise the number of bits written.  If an error occurs
+*                after a partial write, the partially written bits will not
+*                be unwritten.
 ***************************************************************************/
-void PutCodeWord(bit_file_t *bfpOut, int code, unsigned char codeLen)
+int PutCodeWord(bit_file_t *bfpOut, int code, unsigned char codeLen)
 {
-    BitFilePutBitsNum(bfpOut, &code, codeLen, sizeof(code));
+    return BitFilePutBitsNum(bfpOut, &code, codeLen, sizeof(code));
 }
