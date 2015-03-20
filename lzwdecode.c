@@ -51,8 +51,6 @@ typedef struct
 /***************************************************************************
 *                                CONSTANTS
 ***************************************************************************/
-#define EMPTY           -1
-#define DICT_SIZE       (MAX_CODES - FIRST_CODE)
 
 /***************************************************************************
 *                                  MACROS
@@ -63,15 +61,15 @@ typedef struct
 ***************************************************************************/
 
 /* dictionary of string the code word is the dictionary index */
-decode_dictionary_t dictionary[DICT_SIZE];
+static decode_dictionary_t dictionary[(MAX_CODES - FIRST_CODE)];
 
 /***************************************************************************
 *                               PROTOTYPES
 ***************************************************************************/
-unsigned char DecodeRecursive(unsigned int code, FILE *fpOut);
+static unsigned char DecodeRecursive(unsigned int code, FILE *fpOut);
 
 /* read encoded data */
-int GetCodeWord(bit_file_t *bfpIn, unsigned char codeLen);
+static int GetCodeWord(bit_file_t *bfpIn, const unsigned char codeLen);
 
 /***************************************************************************
 *                                FUNCTIONS
@@ -115,8 +113,8 @@ int LZWDecodeFile(FILE *fpIn, FILE *fpOut)
         return -1;
     }
 
-    /* start with 9 bit code words */
-    currentCodeLen = 9;
+    /* start MIN_CODE_LEN bit code words */
+    currentCodeLen = MIN_CODE_LEN;
 
     /* initialize for decoding */
     nextCode = FIRST_CODE;  /* code for next (first) string */
@@ -187,7 +185,7 @@ int LZWDecodeFile(FILE *fpIn, FILE *fpOut)
 *   Effects    : Decoded code word is written to a file
 *   Returned   : The first character in the decoded string
 ***************************************************************************/
-unsigned char DecodeRecursive(unsigned int code, FILE *fpOut)
+static unsigned char DecodeRecursive(unsigned int code, FILE *fpOut)
 {
     unsigned char c;
     unsigned char firstChar;
@@ -228,7 +226,7 @@ unsigned char DecodeRecursive(unsigned int code, FILE *fpOut)
 *         be modified to read in all the bytes from least significant to
 *         most significant followed by any left over bits.
 ***************************************************************************/
-int GetCodeWord(bit_file_t *bfpIn, unsigned char codeLen)
+static int GetCodeWord(bit_file_t *bfpIn, const unsigned char codeLen)
 {
     int code = 0;
     int count;

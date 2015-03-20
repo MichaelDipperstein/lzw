@@ -72,19 +72,21 @@ typedef struct dict_node_t
 ***************************************************************************/
 
 /* dictionary tree node create/free */
-dict_node_t *MakeNode(unsigned int codeWord,
-    unsigned int prefixCode, unsigned char suffixChar);
-void FreeTree(dict_node_t *node);
+static dict_node_t *MakeNode(const unsigned int codeWord,
+    const unsigned int prefixCode, const unsigned char suffixChar);
+static void FreeTree(dict_node_t *node);
 
 /* searches tree for matching dictionary entry */
-dict_node_t *FindDictionaryEntry(dict_node_t *root, int prefixCode,
-    unsigned char c);
+static dict_node_t *FindDictionaryEntry(dict_node_t *root, const int prefixCode,
+    const unsigned char c);
 
 /* makes key from prefix code and character */
-unsigned int MakeKey(unsigned int prefixCode, unsigned char suffixChar);
+static unsigned int MakeKey(const unsigned int prefixCode,
+    const unsigned char suffixChar);
 
 /* write encoded data */
-int PutCodeWord(bit_file_t *bfpOut, int code, unsigned char codeLen);
+static int PutCodeWord(bit_file_t *bfpOut, int code,
+    const unsigned char codeLen);
 
 /***************************************************************************
 *                                FUNCTIONS
@@ -133,8 +135,8 @@ int LZWEncodeFile(FILE *fpIn, FILE *fpOut)
     /* initialize dictionary as empty */
     dictRoot = NULL;
 
-    /* start with 9 bit code words */
-    currentCodeLen = 9;
+    /* start MIN_CODE_LEN bit code words */
+    currentCodeLen = MIN_CODE_LEN;
 
     nextCode = FIRST_CODE;  /* code for next (first) string */
 
@@ -261,7 +263,8 @@ int LZWEncodeFile(FILE *fpIn, FILE *fpOut)
 *   Returned   : Key built from string represented as a prefix + char.  Key
 *                format is {ms nibble of c} + prefix + {ls nibble of c}
 ***************************************************************************/
-unsigned int MakeKey(unsigned int prefixCode, unsigned char suffixChar)
+static unsigned int MakeKey(const unsigned int prefixCode,
+    const unsigned char suffixChar)
 {
     unsigned int key;
 
@@ -291,8 +294,8 @@ unsigned int MakeKey(unsigned int prefixCode, unsigned char suffixChar)
 *   Returned   : Pointer to newly allocated node or NULL on error.
 *                errno will be set on an error.
 ***************************************************************************/
-dict_node_t *MakeNode(unsigned int codeWord,
-    unsigned int prefixCode, unsigned char suffixChar)
+static dict_node_t *MakeNode(const unsigned int codeWord,
+    const unsigned int prefixCode, const unsigned char suffixChar)
 {
     dict_node_t *node;
 
@@ -319,7 +322,7 @@ dict_node_t *MakeNode(unsigned int codeWord,
 *   Effects    : frees allocated tree node from initial parameter down.
 *   Returned   : none
 ***************************************************************************/
-void FreeTree(dict_node_t *node)
+static void FreeTree(dict_node_t *node)
 {
     if (NULL == node)
     {
@@ -356,8 +359,8 @@ void FreeTree(dict_node_t *node)
 *                string, otherwise pointer to suitable parent node.  NULL
 *                is returned for an empty tree.
 ***************************************************************************/
-dict_node_t *FindDictionaryEntry(dict_node_t *root, int prefixCode,
-    unsigned char c)
+static dict_node_t *FindDictionaryEntry(dict_node_t *root, const int prefixCode,
+    const unsigned char c)
 {
     unsigned int searchKey, key;
 
@@ -422,7 +425,8 @@ dict_node_t *FindDictionaryEntry(dict_node_t *root, int prefixCode,
 *                after a partial write, the partially written bits will not
 *                be unwritten.
 ***************************************************************************/
-int PutCodeWord(bit_file_t *bfpOut, int code, unsigned char codeLen)
+static int PutCodeWord(bit_file_t *bfpOut, int code,
+    const unsigned char codeLen)
 {
     return BitFilePutBitsNum(bfpOut, &code, codeLen, sizeof(code));
 }
