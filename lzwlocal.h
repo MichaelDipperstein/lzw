@@ -58,7 +58,6 @@
 /***************************************************************************
 *                                  MACROS
 ***************************************************************************/
-#define MS_BITS_MASK(bits)          (UCHAR_MAX << (bits))
 #define CURRENT_MAX_CODES(bits)     ((unsigned int)(1 << (bits)))
 
 #endif  /* ndef _LZWLOCAL_H_ */

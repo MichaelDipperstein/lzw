@@ -77,8 +77,8 @@ static dict_node_t *MakeNode(const unsigned int codeWord,
 static void FreeTree(dict_node_t *node);
 
 /* searches tree for matching dictionary entry */
-static dict_node_t *FindDictionaryEntry(dict_node_t *root, const int prefixCode,
-    const unsigned char c);
+static dict_node_t *FindDictionaryEntry(dict_node_t *root,
+    const int unsigned prefixCode, const unsigned char c);
 
 /* makes key from prefix code and character */
 static unsigned int MakeKey(const unsigned int prefixCode,
@@ -359,8 +359,8 @@ static void FreeTree(dict_node_t *node)
 *                string, otherwise pointer to suitable parent node.  NULL
 *                is returned for an empty tree.
 ***************************************************************************/
-static dict_node_t *FindDictionaryEntry(dict_node_t *root, const int prefixCode,
-    const unsigned char c)
+static dict_node_t *FindDictionaryEntry(dict_node_t *root,
+    const int unsigned prefixCode, const unsigned char c)
 {
     unsigned int searchKey, key;
 
