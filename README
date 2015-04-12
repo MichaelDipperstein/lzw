@@ -53,6 +53,31 @@ options:
 -o <filename>   The name of the output file.  If no file is specified, stdout
                 will be used.  NOTE: Sending compressed output to stdout may
                 produce undesirable results.
+LIBRARY API
+-----------
+Encoding Data:
+int LZWEncodeFile(FILE *fpIn, FILE *fpOut);
+fpIn
+    The file stream to be encoded.  It must opened.  NULL pointers will return
+    an error.
+fpOut
+    The file stream receiving the encoded results.  It must be opened.  NULL
+    pointers will return an error.
+Return Value
+    Zero for success, -1 for failure.  Error type is contained in errno.  Files
+    will remain open.
+
+Decoding Data:
+int LZWDecodeFile(FILE *fpIn, FILE *fpOut);
+fpIn
+    The file stream to be decoded.  It must be opened.  NULL pointers will
+    return an error.
+fpOut
+    The file stream receiving the decoded results.  It must be opened.  NULL
+    pointers will return an error.
+Return Value
+    Zero for success, -1 for failure.  Error type is contained in errno.  Files
+    will remain open.
 
 HISTORY
 -------
@@ -68,6 +93,12 @@ HISTORY
             bits.
             Used BitFilePutBitsInt/BitFileGetBitsInt to allow for code words
             as large as sizeof(int).  (#define limits code words to 20 bits).
+04/12/15  - Changed return value to 0 for success and -1 for failure with
+            reason in errno.
+          - Removed unused macros and declarations.
+          - Upgraded to latest oplist and bitfile libraries.
+          - Tighter adherence to Michael Barr's "Top 10 Bug-Killing Coding
+            Standard Rules" (http://www.barrgroup.com/webinars/10rules).
 
 TODO
 ----
@@ -75,6 +106,8 @@ TODO
   contain entries for strings that are being encoded.
   - possibly purge and regenerate table after coding drops below X% hits
   - possibly replace least recently used code word (LRU) with new code
+  - possibly start second dictionary when first is X% full and switch at
+    TBD event
 - Speed up code word search during compression
   - try AVL or Red/Black trees
   - maybe something similar to a Fibonacci heap
