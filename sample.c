@@ -9,7 +9,7 @@
 ****************************************************************************
 *
 * SAMPLE: Sample usage of Lempel-Ziv-Welch Encoding Library
-* Copyright (C) 2005, 2007, 2014 by
+* Copyright (C) 2005, 2007, 2014, 2017 by
 * Michael Dipperstein (mdipper@alumni.engr.ucsb.edu)
 *
 * This file is part of the lzw library.
@@ -36,7 +36,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "optlist.h"
+#include "optlist/optlist.h"
 #include "lzw.h"
 
 /***************************************************************************

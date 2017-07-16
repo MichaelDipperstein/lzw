@@ -8,8 +8,8 @@ LD = gcc
 CFLAGS = -O3 -Wall -Wextra -pedantic -ansi -c
 LDFLAGS = -O3 -o
 
-# libraries
-LIBS = -L. -llzw -loptlist
+# Libraries
+LIBS = -L. -Lbitfile -Loptlist -llzw -lbitfile -loptlist
 
 # Treat NT and non-NT windows the same
 ifeq ($(OS),Windows_NT)
@@ -24,35 +24,33 @@ else	#assume Linux/Unix
 	DEL = rm -f
 endif
 
-all:		sample$(EXE) liblzw.a liboptlist.a
+all:		sample$(EXE)
 
-sample$(EXE):	sample.o liblzw.a liboptlist.a
+sample$(EXE):	sample.o liblzw.a optlist/liboptlist.a bitfile/libbitfile.a
 		$(LD) $^ $(LIBS) $(LDFLAGS) $@
 
-sample.o:	sample.c lzw.h optlist.h
+sample.o:	sample.c lzw.h optlist/optlist.h
 		$(CC) $(CFLAGS) $<
 
-liblzw.a:	lzwencode.o lzwdecode.o bitfile.o
-		ar crv liblzw.a lzwencode.o lzwdecode.o bitfile.o
+liblzw.a:	lzwencode.o lzwdecode.o
+		ar crv liblzw.a lzwencode.o lzwdecode.o
 		ranlib liblzw.a
 
-lzwencode.o:	lzwencode.c lzw.h lzwlocal.h bitfile.h
+lzwencode.o:	lzwencode.c lzw.h lzwlocal.h bitfile/bitfile.h
 		$(CC) $(CFLAGS) $<
 
-lzwdecode.o:	lzwdecode.c lzw.h lzwlocal.h bitfile.h
+lzwdecode.o:	lzwdecode.c lzw.h lzwlocal.h bitfile/bitfile.h
 		$(CC) $(CFLAGS) $<
 
-bitfile.o:	bitfile.c bitfile.h
-		$(CC) $(CFLAGS) $<
+bitfile/libbitfile.a:
+		cd bitfile && $(MAKE) libbitfile.a
 
-liboptlist.a:	optlist.o
-		ar crv liboptlist.a optlist.o
-		ranlib liboptlist.a
-
-optlist.o:	optlist.c optlist.h
-		$(CC) $(CFLAGS) $<
+optlist/liboptlist.a:
+		cd optlist && $(MAKE) liboptlist.a
 
 clean:
 		$(DEL) *.o
 		$(DEL) *.a
 		$(DEL) sample$(EXE)
+		cd optlist && $(MAKE) clean
+		cd bitfile && $(MAKE) clean
