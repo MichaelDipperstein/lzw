@@ -11,7 +11,7 @@
 *
 * LZW: An ANSI C Lempel-Ziv-Welch Encoding/Decoding Routines
 * Copyright (C) 2005, 2007, 2014, 2017 by
-* Michael Dipperstein (mdipper@alumni.engr.ucsb.edu)
+* Michael Dipperstein (mdipperstein@gmail.com)
 *
 * This file is part of the lzw library.
 *
