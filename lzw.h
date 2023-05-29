@@ -32,7 +32,6 @@
 
 #ifndef _LZW_H_
 #define _LZW_H_
-
 /***************************************************************************
 *                                CONSTANTS
 ***************************************************************************/
@@ -45,5 +44,13 @@ int LZWEncodeFile(FILE *fpIn, FILE *fpOut);
 
 /* decode inFile*/
 int LZWDecodeFile(FILE *fpIn, FILE *fpOut);
+
+typedef struct data_as_ints{
+    unsigned char * data;
+    int number_of_ints;
+    int current_position; 
+} data_as_ints;
+
+data_as_ints output_data;
 
 #endif  /* ndef _LZW_H_ */
