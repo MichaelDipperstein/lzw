@@ -17,8 +17,9 @@ lzwencode.c     - Source for library lzw encoding routines.
 Makefile        - makefile for this project (assumes gcc compiler and GNU make)
 README          - this file
 sample.c        - Demonstration of how to use the lzw library functions
-optlist/        - Subtree containing optlist command line option parser library
-bitfile/        - Subtree containing bitfile bitwise file library
+optlist/        - Submodule containing optlist command line option parser
+                  library
+bitfile/        - Submodule containing bitfile bitwise file library
 
 BUILDING
 --------
