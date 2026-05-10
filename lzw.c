@@ -8,7 +8,7 @@
 *
 ****************************************************************************
 *
-* SAMPLE: Sample usage of Lempel-Ziv-Welch Encoding Library
+* LZW: Sample usage of Lempel-Ziv-Welch Encoding Library
 * Copyright (C) 2005, 2007, 2014, 2017 by
 * Michael Dipperstein (mdipperstein@gmail.com)
 *
@@ -175,14 +175,26 @@ int main(int argc, char *argv[])
     /* parsed the parameters.  now encode or decode. */
     if (encode)
     {
-        LZWEncodeFile(fpIn, fpOut);
+        int retval;
+
+        retval = LZWEncodeFile(fpIn, fpOut);
+        if (retval != 0)
+        {
+            perror("Encoding input file");
+        }
     }
     else
     {
-        LZWDecodeFile(fpIn, fpOut);
+        int retval;
+
+        retval = LZWDecodeFile(fpIn, fpOut);
+        if (retval != 0)
+        {
+            perror("Encoding input file");
+        }
     }
 
-    free(fpIn);
-    free(fpOut);
+    fclose(fpIn);
+    fclose(fpOut);
     return 0;
 }

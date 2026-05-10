@@ -1,0 +1,5 @@
+liblzw.a
+lzwdecode.o
+lzwencode.o
+lzw
+lzw.o

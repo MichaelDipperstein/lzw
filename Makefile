@@ -24,12 +24,12 @@ else	#assume Linux/Unix
 	DEL = rm -f
 endif
 
-all:		sample$(EXE)
+all:		lzw$(EXE)
 
-sample$(EXE):	sample.o liblzw.a optlist/liboptlist.a bitfile/libbitfile.a
+lzw$(EXE):	lzw.o liblzw.a optlist/liboptlist.a bitfile/libbitfile.a
 		$(LD) $^ $(LIBS) $(LDFLAGS) $@
 
-sample.o:	sample.c lzw.h optlist/optlist.h
+lzw.o:	lzw.c lzw.h optlist/optlist.h
 		$(CC) $(CFLAGS) $<
 
 liblzw.a:	lzwencode.o lzwdecode.o
@@ -51,6 +51,6 @@ optlist/liboptlist.a:
 clean:
 		$(DEL) *.o
 		$(DEL) *.a
-		$(DEL) sample$(EXE)
+		$(DEL) lzw$(EXE)
 		cd optlist && $(MAKE) clean
 		cd bitfile && $(MAKE) clean
